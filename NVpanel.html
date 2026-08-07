@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NVL.panel - Multitools</title>
+    <!-- Link ke Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Link ke Google Font Inter untuk tipografi modern -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #000000;
+            --text-primary: #ffffff;
+            --text-secondary: #aaaaaa;
+            --card-bg: #111111;
+            --border-color: #222222;
+            --accent-glow: rgba(255, 255, 255, 0.2);
+            --font-main: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            padding-bottom: 80px;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* ==========================================
+           LOADING SCREEN (MONOCHROME NIGHT CITY STYLE)
+           ========================================== */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #000000;
+            background-image: 
+                radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 20% 60%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+                linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.95)),
+                url('https://images.unsplash.com/photo-1509114397022-ed747cca3f65?q=80&w=1000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            filter: grayscale(100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        #loadingScreen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-logo {
+            width: 65px;
+            height: 65px;
+            background: #ffffff;
+            color: #000000;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 900;
+            box-shadow: 0 0 35px rgba(255, 255, 255, 0.6);
+            margin-bottom: 20px;
+            animation: pulseGlow 1.8s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); transform: scale(1); }
+            50% { box-shadow: 0 0 45px rgba(255, 255, 255, 0.9); transform: scale(1.05); }
+        }
+
+        .loader-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #ffffff;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        .loader-sub {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #aaaaaa;
+            margin-bottom: 30px;
+        }
+
+        .loader-bar-container {
+            width: 180px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loader-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ffffff;
+            animation: loadProgress 3s linear forwards;
+        }
+
+        @keyframes loadProgress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* ==========================================
+           MAIN CONTAINER & LAYOUT
+           ========================================== */
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-btn, .search-btn, .notif-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .logo-icon-placeholder {
+            width: 32px;
+            height: 32px;
+            background-color: var(--text-primary);
+            color: var(--bg-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 22px;
+        }
+
+        .logo-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .logo-text p {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: -3px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* Sidebar / Drawer Menu */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 200; opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+        .sidebar {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+            background-color: #0c0c0c; border-right: 1px solid var(--border-color);
+            z-index: 201; transition: left 0.3s ease; display: flex; flex-direction: column; padding: 20px;
+        }
+        .sidebar.active { left: 0; }
+
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;
+        }
+        .sidebar-close { background: none; border: none; color: var(--text-primary); font-size: 22px; cursor: pointer; }
+
+        .sidebar-menu { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+        .sidebar-menu li a {
+            color: var(--text-secondary); text-decoration: none; font-size: 14px;
+            display: flex; align-items: center; gap: 15px; padding: 10px; border-radius: 8px; transition: 0.2s;
+        }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background-color: var(--card-bg); color: white; }
+
+        /* Hero Banner */
+        .hero-banner {
+            margin: 20px; padding: 25px; background-color: var(--card-bg);
+            border-radius: 16px; display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid var(--border-color);
+        }
+        .hero-content { max-width: 60%; }
+        .welcome-text { color: var(--text-secondary); font-size: 12px; font-weight: 500; margin-bottom: 8px; text-transform: uppercase; }
+        .hero-title { font-size: 22px; line-height: 1.3; margin-bottom: 12px; }
+        .hero-sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; }
+        .cta-btn {
+            background-color: var(--text-primary); color: var(--bg-color); padding: 10px 18px;
+            border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none;
+        }
+
+        .cube-graphics { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .css-cube {
+            width: 80px; height: 80px; background-color: #1a1a1a; border: 2px solid #2a2a2a;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 40px; font-weight: 800; box-shadow: 0 0 30px var(--accent-glow);
+            transform: rotateX(-15deg) rotateY(15deg);
+        }
+        .dot-pagination { display: flex; gap: 6px; }
+        .dot { width: 7px; height: 7px; background-color: #333; border-radius: 50%; }
+        .dot.active { background-color: var(--text-primary); }
+
+        section { padding: 10px 20px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .section-title { font-size: 17px; font-weight: 600; }
+        .see-all-btn { font-size: 13px; color: var(--text-secondary); background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
+        .tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+
+        .tool-card {
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 18px; display: flex; justify-content: space-between;
+            align-items: center; text-decoration: none; color: white; transition: border-color 0.2s; cursor: pointer;
+            position: relative;
+        }
+        .tool-card:hover { border-color: #333; }
+
+        .icon-green { color: #2ecc71; }
+        .icon-blue { color: #3498db; }
+        .icon-teal { color: #1abc9c; }
+        .icon-yellow { color: #f1c40f; }
+
+        .tool-info h3 { font-size: 14px; margin-bottom: 4px; }
+        .tool-info p { font-size: 11px; color: var(--text-secondary); max-width: 110px; line-height: 1.4; }
+
+        .arrow-btn {
+            background-color: #1a1a1a; width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; border: 1px solid var(--border-color);
+        }
+
+        .fav-star {
+            position: absolute; top: 10px; right: 10px; background: none; border: none;
+            color: #555; font-size: 14px; cursor: pointer;
+        }
+        .fav-star.active { color: #f1c40f; }
+
+        .stats-area {
+            background-color: var(--card-bg); margin: 20px; padding: 20px;
+            border-radius: 14px; border: 1px solid var(--border-color);
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center;
+        }
+        .stat-item i { color: var(--text-secondary); font-size: 18px; margin-bottom: 8px; }
+        .stat-item h2 { font-size: 17px; font-weight: 700; }
+        .stat-item p { font-size: 11px; color: var(--text-secondary); }
+
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+
+        .dynamic-page-view { padding: 20px; color: var(--text-secondary); }
+        .dynamic-page-view h2 { color: white; font-size: 20px; margin-bottom: 5px; }
+
+        /* Panel Box Pengaturan */
+        .panel-box {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 15px;
+        }
+        .panel-box h3 {
+            font-size: 14px;
+            color: white;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .panel-box p {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .upload-dropzone {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin-top: 10px;
+            background: #000;
+            display: block;
+            transition: border-color 0.2s;
+        }
+        .upload-dropzone:hover { border-color: #2ecc71; }
+        .upload-dropzone i { font-size: 24px; color: #2ecc71; margin-bottom: 8px; display: block; }
+
+        .settings-input, .settings-select {
+            width: 100%; padding: 12px; margin-top: 10px; margin-bottom: 12px; background: #000; border: 1px solid var(--border-color); color: white; border-radius: 6px; font-size: 14px;
+        }
+        .save-btn { background: #2ecc71; color: white; border: none; padding: 12px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; font-size: 14px; }
+        .delete-btn { background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+
+        /* Modal / View untuk Menjalankan File HTML */
+        #toolRunnerModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 99999; display: none; flex-direction: column;
+        }
+        #toolRunnerModal.active { display: flex; }
+        .runner-header {
+            background: #111; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+        }
+        .runner-header h3 { color: white; font-size: 16px; }
+        .close-runner { background: #e74c3c; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .runner-body { flex: 1; width: 100%; border: none; background: white; }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 480px; background-color: #0c0c0c; border-top: 1px solid var(--border-color);
+            display: flex; justify-content: space-around; align-items: center; padding: 12px 0; z-index: 100; backdrop-filter: blur(5px);
+        }
+        .nav-item { text-align: center; color: var(--text-secondary); text-decoration: none; font-size: 10px; flex: 1; background: none; border: none; cursor: pointer; }
+        .nav-item i { font-size: 18px; margin-bottom: 4px; display: block; }
+        .nav-item.active { color: white; }
+        .nav-item.active p { font-weight: 500; }
+        .nav-item.center-btn {
+            flex: none; width: 55px; height: 55px; border-radius: 50%; border: 2px solid white;
+            background-color: #1a1a1a; margin-top: -25px; display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: white; box-shadow: 0 0 20px var(--accent-glow); cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOADING SCREEN (3 DETIK) -->
+<div id="loadingScreen">
+    <div class="loader-logo">N</div>
+    <div class="loader-title">NVL.panel</div>
+    <div class="loader-sub">multitools system</div>
+    <div class="loader-bar-container">
+        <div class="loader-bar-fill"></div>
+    </div>
+</div>
+
+<!-- MODAL RUNNER / RUN WEB TOOL -->
+<div id="toolRunnerModal">
+    <div class="runner-header">
+        <h3 id="runnerTitle">Running Tool</h3>
+        <button class="close-runner" onclick="closeToolRunner()">Tutup</button>
+    </div>
+    <iframe id="runnerIframe" class="runner-body"></iframe>
+</div>
+
+<div class="app-container">
+    <!-- Header -->
+    <header>
+        <div class="logo-area">
+            <button class="menu-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <div class="logo-icon-placeholder">N</div>
+            <div class="logo-text">
+                <h1>NVL.panel</h1>
+                <p>multitools</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="search-btn"><i class="fa-solid fa-search"></i></button>
+            <button class="notif-btn"><i class="fa-regular fa-bell"></i></button>
+        </div>
+    </header>
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <nav class="sidebar" id="sidebarMenu">
+        <div class="sidebar-header">
+            <div class="logo-area">
+                <div class="logo-icon-placeholder" style="width:28px; height:28px; font-size:18px;">N</div>
+                <h2 style="font-size: 16px;">NVL.panel</h2>
+            </div>
+            <button class="sidebar-close" id="sidebarClose"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="active" onclick="switchPage('home'); closeSidebar();"><i class="fa-solid fa-house"></i> Beranda Utama</a></li>
+            <li><a href="#" onclick="switchPage('all-tools'); closeSidebar();"><i class="fa-solid fa-compass"></i> Jelajahi Tools</a></li>
+            <li><a href="#" onclick="switchPage('manage-tools'); closeSidebar();"><i class="fa-solid fa-sliders"></i> Pengaturan Fitur & Upload</a></li>
+            <li><a href="#" onclick="switchPage('profile'); closeSidebar();"><i class="fa-solid fa-user-gear"></i> Profil Saya</a></li>
+            <li><a href="#" onclick="closeSidebar(); alert('NVL.panel v2.5');"><i class="fa-solid fa-circle-info"></i> Tentang Kami</a></li>
+        </ul>
+    </nav>
+
+    <!-- HOME PAGE -->
+    <div id="pageHome" class="page-content active">
+        <div class="hero-banner">
+            <div class="hero-content">
+                <p class="welcome-text" id="welcomeGreeting">Welcome to NVL.panel</p>
+                <h1 class="hero-title">Semua Tools<br>dalam satu panel.</h1>
+                <p class="hero-sub">Cepat, mudah, lengkap, dan gratis untuk semua kebutuhan Anda.</p>
+                <button class="cta-btn" onclick="switchPage('all-tools')">
+                    Jelajahi Semua Tools <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+            <div class="cube-graphics">
+                <div class="css-cube">N</div>
+                <div class="dot-pagination">
+                    <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
+                </div>
+            </div>
+        </div>
+
+        <section>
+            <div class="section-header">
+                <h2 class="section-title">Tools Populer</h2>
+                <button class="see-all-btn" onclick="switchPage('all-tools')">
+                    <i class="fa-solid fa-table-cells-large"></i> Lihat Semua
+                </button>
+            </div>
+            <div class="tools-grid" id="popularToolsGrid"></div>
+        </section>
+
+        <div class="stats-area">
+            <div class="stat-item"><i class="fa-solid fa-box-open"></i><h2>15+</h2><p>Total Tools</p></div>
+            <div class="stat-item"><i class="fa-solid fa-users"></i><h2>jawa project+</h2><p></p></div>
+            <div class="stat-item"><i class="fa-solid fa-list"></i><h2>membantu</h2><p></p></div>
+            <div class="stat-item"><i class="fa-solid fa-shield-alt"></i><h2>99.9%</h2><p>Uptime</p></div>
+        </div>
+    </div>
+
+    <!-- ALL TOOLS PAGE -->
+    <div id="pageAllTools" class="page-content">
+        <div class="dynamic-page-view">
+            <h2>Semua Tools Tersedia</h2>
+            <p style="margin-bottom: 20px;">Klik tool untuk menjalankan aplikasinya.</p>
+            <div class="tools-grid" id="allToolsGrid"></div>
+        </div>
+    </div>
+
+    <!-- FAVORITE PAGE -->
+    <div id="pageFavorite" class="page-content">
+        <div class="dynamic-page-view">
+            <h2>Tools Favorit Anda</h2>
+            <p style="margin-bottom: 20px;">Daftar tools yang telah Anda tandai sebagai favorit.</p>
+            <div class="tools-grid" id="favoriteToolsGrid"></div>
+        </div>
+    </div>
+
+    <!-- MANAGE TOOLS & UPLOAD PAGE -->
+    <div id="pageManageTools" class="page-content">
+        <div class="dynamic-page-view">
+            <h2>Pengaturan Fitur</h2>
+            <p style="margin-bottom: 15px;">Upload file HTML dari HP, atur ke populer, atau hapus.</p>
+
+            <!-- 1. Upload File Tool -->
+            <div class="panel-box">
+                <h3><i class="fa-solid fa-cloud-arrow-up" style="color: #2ecc71;"></i> Upload File Tool (.html)</h3>
+                <p>Pilih file dari File Manager HP Anda.</p>
+                <label class="upload-dropzone">
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                    <span style="font-size: 12px; color: white;" id="fileLabelText">Ketuk untuk pilih file .html</span>
+                    <input type="file" id="htmlFileInput" accept=".html" style="display: none;" onchange="handleFileSelect(event)">
+                </label>
+            </div>
+
+            <!-- 2. Pengaturan Tools Populer -->
+            <div class="panel-box">
+                <h3><i class="fa-solid fa-star" style="color: #f1c40f;"></i> Pengaturan Tools Populer</h3>
+                <p>Pilih file terunggah untuk ditampilkan ke menu Tools Populer di Beranda.</p>
+                <select id="popularSelect" class="settings-select">
+                    <option value="">-- Pilih Tool Terunggah --</option>
+                </select>
+                <input type="text" id="popDescInput" class="settings-input" placeholder="Deskripsi Singkat (Cth: Alat bantu cepat...)">
+                <button class="save-btn" onclick="addToPopular()">Tambah ke Tools Populer</button>
+            </div>
+
+            <!-- 3. Kelola & Hapus Tools -->
+            <div class="panel-box">
+                <h3><i class="fa-solid fa-toolbox" style="color: #3498db;"></i> Kelola & Hapus Tools</h3>
+                <p style="margin-bottom: 12px;">Daftar file custom yang telah Anda unggah.</p>
+                <div id="uploadedToolsList">
+                    <p style="font-style: italic; color: #777;">Belum ada file kustom yang diunggah.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div id="pageProfile" class="page-content">
+        <div class="dynamic-page-view">
+            <h2>Pengaturan Profil</h2>
+            <p>Atur nama pengguna Anda di sini.</p>
+
+            <div class="panel-box" style="margin-top: 15px;">
+                <h3><i class="fa-solid fa-id-badge" style="color: #f1c40f;"></i> Nama Profil (Welcome Greeting)</h3>
+                <p>Nama ini tampil sebagai sambutan selamat datang di Beranda.</p>
+                <input type="text" id="usernameInput" class="settings-input" placeholder="Masukkan nama Anda...">
+                <button class="save-btn" onclick="saveUsername()">Simpan Nama</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchPage('home', this)">
+            <i class="fa-solid fa-house"></i><p>Home</p>
+        </button>
+        <button class="nav-item" onclick="switchPage('all-tools', this)">
+            <i class="fa-solid fa-border-all"></i><p>All Tools</p>
+        </button>
+        <button class="nav-item center-btn" onclick="triggerMagic()">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </button>
+        <button class="nav-item" onclick="switchPage('favorite', this)">
+            <i class="fa-regular fa-heart"></i><p>Favorite</p>
+        </button>
+        <button class="nav-item" onclick="switchPage('profile', this)">
+            <i class="fa-regular fa-user"></i><p>Profile</p>
+        </button>
+    </nav>
+</div>
+
+<!-- JavaScript -->
+<script>
+    // TIMER LOADING SCREEN (3 Detik)
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const loader = document.getElementById('loadingScreen');
+            loader.classList.add('fade-out');
+        }, 3000);
+    });
+
+    // Fitur AI Chat & Translate telah dihapus, menyisakan 2 tool bawaan lainnya
+    const defaultTools = [
+        
+    ];
+
+    let currentUserName = localStorage.getItem('nvl_username') || "";
+    let uploadedTools = JSON.parse(localStorage.getItem('nvl_uploaded_tools') || "[]");
+    let popularCustomTools = JSON.parse(localStorage.getItem('nvl_popular_custom') || "[]");
+    let favorites = JSON.parse(localStorage.getItem('nvl_favorites') || "[]");
+
+    window.addEventListener('DOMContentLoaded', () => {
+        updateWelcomeGreeting();
+        if(currentUserName) document.getElementById('usernameInput').value = currentUserName;
+        renderPopularTools();
+        renderAllTools();
+        renderFavoriteTools();
+        renderUploadedToolsList();
+        updatePopularSelectOptions();
+    });
+
+    function saveUsername() {
+        const inputVal = document.getElementById('usernameInput').value.trim();
+        currentUserName = inputVal;
+        localStorage.setItem('nvl_username', currentUserName);
+        updateWelcomeGreeting();
+        alert(currentUserName ? `Nama berhasil disimpan: ${currentUserName}` : "Nama profil dikosongkan.");
+    }
+
+    function updateWelcomeGreeting() {
+        const greetingEl = document.getElementById('welcomeGreeting');
+        if (currentUserName) {
+            greetingEl.innerText = `Welcome, ${currentUserName}!`;
+        } else {
+            greetingEl.innerText = `Welcome to NVL.panel`;
+        }
+    }
+
+    // Handle Upload File .html
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.name.endsWith('.html')) {
+            alert("Harap pilih file dengan format .html!");
+            return;
+        }
+
+        document.getElementById('fileLabelText').innerText = file.name;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const htmlContent = e.target.result;
+            const newTool = {
+                id: 'custom-' + Date.now(),
+                name: file.name.replace('.html', ''),
+                desc: 'Custom uploaded tool',
+                icon: 'fa-file-code',
+                color: 'icon-green',
+                content: htmlContent,
+                type: 'custom'
+            };
+
+            uploadedTools.push(newTool);
+            localStorage.setItem('nvl_uploaded_tools', JSON.stringify(uploadedTools));
+            
+            renderUploadedToolsList();
+            renderAllTools();
+            updatePopularSelectOptions();
+            alert(`File "${file.name}" berhasil diunggah!`);
+            event.target.value = "";
+            document.getElementById('fileLabelText').innerText = "Ketuk untuk pilih file .html";
+        };
+        reader.readAsText(file);
+    }
+
+    function deleteTool(id) {
+        if(confirm("Apakah Anda yakin ingin menghapus tool ini?")) {
+            // Hapus dari array uploadedTools
+            uploadedTools = uploadedTools.filter(tool => tool.id !== id);
+            // Hapus dari popularCustomTools jika ada
+            popularCustomTools = popularCustomTools.filter(toolId => toolId !== id);
+            // Hapus dari favorites jika ada
+            favorites = favorites.filter(favId => favId !== id);
+
+            // Simpan pembaruan ke localStorage secara permanen
+            localStorage.setItem('nvl_uploaded_tools', JSON.stringify(uploadedTools));
+            localStorage.setItem('nvl_popular_custom', JSON.stringify(popularCustomTools));
+            localStorage.setItem('nvl_favorites', JSON.stringify(favorites));
+
+            // Render ulang seluruh tampilan
+            renderUploadedToolsList();
+            renderPopularTools();
+            renderAllTools();
+            renderFavoriteTools();
+            updatePopularSelectOptions();
+            
+            alert("Tool berhasil dihapus secara permanen.");
+        }
+    }
+
+    function addToPopular() {
+        const selectEl = document.getElementById('popularSelect');
+        const descInput = document.getElementById('popDescInput');
+        const selectedId = selectEl.value;
+
+        if(!selectedId) {
+            alert("Silakan pilih tool terlebih dahulu!");
+            return;
+        }
+
+        const tool = uploadedTools.find(t => t.id === selectedId);
+        if(tool && descInput.value.trim()) {
+            tool.desc = descInput.value.trim();
+            localStorage.setItem('nvl_uploaded_tools', JSON.stringify(uploadedTools));
+        }
+
+        if(!popularCustomTools.includes(selectedId)) {
+            popularCustomTools.push(selectedId);
+            localStorage.setItem('nvl_popular_custom', JSON.stringify(popularCustomTools));
+        }
+
+        renderPopularTools();
+        alert("Tool berhasil ditambahkan ke Tools Populer!");
+        selectEl.value = "";
+        descInput.value = "";
+    }
+
+    function toggleFavorite(id, event) {
+        event.stopPropagation();
+        if(favorites.includes(id)) {
+            favorites = favorites.filter(f => f !== id);
+        } else {
+            favorites.push(id);
+        }
+        localStorage.setItem('nvl_favorites', JSON.stringify(favorites));
+        renderPopularTools();
+        renderAllTools();
+        renderFavoriteTools();
+    }
+
+    function runTool(tool) {
+        if(tool.type === 'default') {
+            alert(`Membuka fitur bawaan: ${tool.name}`);
+        } else {
+            document.getElementById('runnerTitle').innerText = tool.name;
+            const iframe = document.getElementById('runnerIframe');
+            iframe.srcdoc = tool.content;
+            document.getElementById('toolRunnerModal').classList.add('active');
+        }
+    }
+
+    function closeToolRunner() {
+        document.getElementById('toolRunnerModal').classList.remove('active');
+        document.getElementById('runnerIframe').srcdoc = "";
+    }
+
+    function updatePopularSelectOptions() {
+        const selectEl = document.getElementById('popularSelect');
+        selectEl.innerHTML = `<option value="">-- Pilih Tool Terunggah --</option>`;
+        uploadedTools.forEach(tool => {
+            const opt = document.createElement('option');
+            opt.value = tool.id;
+            opt.innerText = tool.name;
+            selectEl.appendChild(opt);
+        });
+    }
+
+    function renderUploadedToolsList() {
+        const container = document.getElementById('uploadedToolsList');
+        if (uploadedTools.length === 0) {
+            container.innerHTML = `<p style="font-style: italic; color: #777;">Belum ada file kustom yang diunggah.</p>`;
+            return;
+        }
+
+        container.innerHTML = "";
+        uploadedTools.forEach(tool => {
+            const item = document.createElement('div');
+            item.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #000; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid var(--border-color);";
+            item.innerHTML = `
+                <div>
+                    <strong style="color: white; font-size: 13px; display: block;">${tool.name}</strong>
+                    <span style="font-size: 10px; color: var(--text-secondary);">${tool.desc}</span>
+                </div>
+                <button class="delete-btn" onclick="deleteTool('${tool.id}')"><i class="fa-solid fa-trash"></i> Hapus</button>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    function renderPopularTools() {
+        const grid = document.getElementById('popularToolsGrid');
+        grid.innerHTML = "";
+        
+        let popList = [...defaultTools];
+        popularCustomTools.forEach(id => {
+            const t = uploadedTools.find(tool => tool.id === id);
+            if(t) popList.push(t);
+        });
+
+        if(popList.length === 0) {
+            grid.innerHTML = `<p style="font-style: italic; color: #777; grid-column: span 2;">Belum ada tools populer.</p>`;
+            return;
+        }
+
+        popList.forEach(tool => {
+            const isFav = favorites.includes(tool.id);
+            const card = document.createElement('div');
+            card.className = "tool-card";
+            card.onclick = () => runTool(tool);
+            card.innerHTML = `
+                <button class="fav-star ${isFav ? 'active' : ''}" onclick="toggleFavorite('${tool.id}', event)"><i class="fa-solid fa-star"></i></button>
+                <div>
+                    <i class="fa-solid ${tool.icon} tool-card-icon ${tool.color}"></i>
+                    <div class="tool-info"><h3>${tool.name}</h3><p>${tool.desc}</p></div>
+                </div>
+                <span class="arrow-btn"><i class="fa-solid fa-arrow-right"></i></span>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function renderAllTools() {
+        const grid = document.getElementById('allToolsGrid');
+        grid.innerHTML = "";
+        const allList = [...defaultTools, ...uploadedTools];
+
+        allList.forEach(tool => {
+            const isFav = favorites.includes(tool.id);
+            const card = document.createElement('div');
+            card.className = "tool-card";
+            card.onclick = () => runTool(tool);
+            card.innerHTML = `
+                <button class="fav-star ${isFav ? 'active' : ''}" onclick="toggleFavorite('${tool.id}', event)"><i class="fa-solid fa-star"></i></button>
+                <div>
+                    <i class="fa-solid ${tool.icon} tool-card-icon ${tool.color}"></i>
+                    <div class="tool-info"><h3>${tool.name}</h3><p>${tool.desc}</p></div>
+                </div>
+                <span class="arrow-btn"><i class="fa-solid fa-arrow-right"></i></span>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function renderFavoriteTools() {
+        const grid = document.getElementById('favoriteToolsGrid');
+        grid.innerHTML = "";
+        const allList = [...defaultTools, ...uploadedTools];
+        const favList = allList.filter(tool => favorites.includes(tool.id));
+
+        if(favList.length === 0) {
+            grid.innerHTML = `<p style="font-style: italic; color: #777; grid-column: span 2;">Belum ada tools yang ditandai sebagai favorit.</p>`;
+            return;
+        }
+
+        favList.forEach(tool => {
+            const card = document.createElement('div');
+            card.className = "tool-card";
+            card.onclick = () => runTool(tool);
+            card.innerHTML = `
+                <button class="fav-star active" onclick="toggleFavorite('${tool.id}', event)"><i class="fa-solid fa-star"></i></button>
+                <div>
+                    <i class="fa-solid ${tool.icon} tool-card-icon ${tool.color}"></i>
+                    <div class="tool-info"><h3>${tool.name}</h3><p>${tool.desc}</p></div>
+                </div>
+                <span class="arrow-btn"><i class="fa-solid fa-arrow-right"></i></span>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const sidebarMenu = document.getElementById('sidebarMenu');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const sidebarClose = document.getElementById('sidebarClose');
+
+    function openSidebar() { sidebarMenu.classList.add('active'); sidebarOverlay.classList.add('active'); }
+    function closeSidebar() { sidebarMenu.classList.remove('active'); sidebarOverlay.classList.remove('active'); }
+    hamburgerBtn.addEventListener('click', openSidebar);
+    sidebarClose.addEventListener('click', closeSidebar);
+    sidebarOverlay.addEventListener('click', closeSidebar);
+
+    function switchPage(pageId, element) {
+        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+        if (pageId === 'home') document.getElementById('pageHome').classList.add('active');
+        else if (pageId === 'all-tools') { document.getElementById('pageAllTools').classList.add('active'); renderAllTools(); }
+        else if (pageId === 'favorite') { document.getElementById('pageFavorite').classList.add('active'); renderFavoriteTools(); }
+        else if (pageId === 'manage-tools') document.getElementById('pageManageTools').classList.add('active');
+        else if (pageId === 'profile') document.getElementById('pageProfile').classList.add('active');
+
+        if (element) {
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => {
+                if(!btn.classList.contains('center-btn')) btn.classList.remove('active');
+            });
+            element.classList.add('active');
+        } else {
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => btn.classList.remove('active'));
+            if(pageId === 'home') document.querySelector('.bottom-nav button:nth-child(1)').classList.add('active');
+            if(pageId === 'all-tools') document.querySelector('.bottom-nav button:nth-child(2)').classList.add('active');
+            if(pageId === 'favorite') document.querySelector('.bottom-nav button:nth-child(4)').classList.add('active');
+            if(pageId === 'profile') document.querySelector('.bottom-nav button:nth-child(5)').classList.add('active');
+        }
+        window.scrollTo(0, 0);
+    }
+
+    function triggerMagic() { alert("✨ NVL.panel Assistant aktif!"); }
+</script>
+
+</body>
+</html>
